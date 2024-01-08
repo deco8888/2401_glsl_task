@@ -1,0 +1,135 @@
+@use 'sass:list';
+@use 'sass:math';
+@use '../settings/size' as size;
+
+@function get-per($size, $parent: var(--base-size)) {
+    @return calc(#{$size} / #{$parent} * 100%);
+}
+
+@function get-vw($size, $viewport: var(--base-size)) {
+    $rate: list.slash(100, $viewport);
+
+    @return calc(#{$rate} * #{$size} * 1vw);
+}
+
+@function get-vw-min($size, $viewport: var(--base-size)) {
+    $rate: list.slash(100, $viewport);
+
+    @return min(calc($size * 1px), calc(#{$rate} * #{$size} * 1vw));
+}
+
+@function get-vh($size, $viewport: var(--base-size)) {
+    $rate: list.slash(100, $viewport);
+
+    @return calc(#{$rate} * #{$size} * 1vh);
+}
+
+@function strip-lh($size, $font-size-list, $line-height-list, $parent: var(--base-size)) {
+    $num: 0;
+
+    @each $line-height in $line-height-list {
+        $key: list.index($line-height-list, $line-height);
+        $num: $num + list.nth($font-size-list, $key) * math.div($line-height - 1, 2);
+    }
+
+    @return calc((#{$size} / #{$parent} * 100%) - #{$num});
+}
+
+@function strip-lh-default($size, $font-size-list, $line-height-list, $parent: var(--base-size)) {
+    $num: 0;
+
+    @each $line-height in $line-height-list {
+        $key: list.index($line-height-list, $line-height);
+        $font-size: get-size-pc-default(list.nth($font-size-list, $key), $parent);
+        $num: calc($num + calc($font-size * math.div($line-height - 1, 2)));
+    }
+
+    @return calc((#{$size} / #{$parent} * 100%) - #{$num});
+}
+
+@function strip-lh-vw($size, $font-size-list, $line-height-list, $parent: var(--base-size), $base) {
+    $rate: math.div(100, $base);
+    $num: 0;
+
+    @each $line-height in $line-height-list {
+        $key: list.index($line-height-list, $line-height);
+        $font-size: list.nth($font-size-list, $key);
+        $num: $num + ($rate * $font-size * 1vw) * math.div($line-height - 1, 2);
+    }
+
+    @return calc((#{$size} / #{$parent} * 100%) - #{$num});
+}
+
+@function strip-lh-fluid($size, $min-value, $max-value, $line-height, $parent: var(--base-size)) {
+    $diff-value: #{strip-unit($max-value - $min-value)};
+    $diff-vw: #{strip-unit(size.$max-vw - size.$min-vw)};
+
+    @return calc(
+        (#{$size} / #{$parent} * 100%) -
+            ((#{$min-value} + #{$diff-value} * (100vw - #{size.$min-vw}) / #{$diff-vw}) * (#{$line-height} - 1) / 2)
+    );
+}
+
+@function strip-lh-fluid-default($size, $max-value, $line-height, $parent: var(--base-size)) {
+    $min-value: calc($max-value * strip-unit(math.div(size.$min-vw, size.$max-vw)));
+    $diff-value: #{strip-unit($max-value - $min-value)};
+    $diff-vw: #{strip-unit(size.$max-vw - size.$min-vw)};
+
+    @return calc(
+        (#{$size} / #{$parent} * 100%) -
+            ((#{$min-value} + #{$diff-value} * (100vw - #{size.$min-vw}) / #{$diff-vw}) * (#{$line-height} - 1) / 2)
+    );
+}
+
+@function strip-unit($number) {
+    @if type-of($number) == 'number' and not unitless($number) {
+        @return math.div($number, $number * 0 + 1);
+    }
+
+    @return $number;
+}
+
+@mixin fluid-type($properties, $min-value, $max-value, $max-vw: 1920px) {
+    @each $property in $properties {
+        #{$property}: $min-value;
+    }
+
+    @media (min-width: size.$min-vw) {
+        @each $property in $properties {
+            #{$property}: calc(
+                #{$min-value} +
+                    #{strip-unit($max-value - $min-value)} *
+                    (100vw - #{size.$min-vw}) /
+                    #{strip-unit(size.$max-vw - size.$min-vw)}
+            );
+        }
+    }
+
+    @media (min-width: size.$max-vw) {
+        @each $property in $properties {
+            #{$property}: #{get-vw(strip-unit($max-value))};
+        }
+    }
+}
+
+@function get-size-pc($min-value, $max-value, $max-vw: 1920px) {
+    @return calc(
+        #{$min-value} + #{strip-unit($max-value - $min-value)} * (100vw - #{size.$min-vw}) / #{strip-unit(
+                size.$max-vw - size.$min-vw
+            )}
+    );
+}
+
+@function get-size-pc-default($max-value, $max-vw: 1920px) {
+    $min-value: calc($max-value * strip-unit(math.div(size.$min-vw, size.$max-vw)));
+
+    @return calc(
+        #{$min-value} + #{strip-unit($max-value - $min-value)} * (100vw - #{size.$min-vw}) / #{strip-unit(
+                size.$max-vw - size.$min-vw
+            )}
+    );
+}
+
+@function set-size($size: 0) {
+    @return #{$size};
+}

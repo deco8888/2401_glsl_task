@@ -1,0 +1,10 @@
+@use '../global/index' as g;
+
+// CSS Variables
+:root {
+    --base-size: #{g.$pc-base-size};
+
+    @include g.mq(mobile) {
+        --base-size: #{g.$sp-base-size};
+    }
+}

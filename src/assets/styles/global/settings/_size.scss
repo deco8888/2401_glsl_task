@@ -1,0 +1,26 @@
+// Design sizes
+$pc-base-size: 1920;
+$tablet-base-size: 1020;
+$sp-base-size: 750;
+
+$pc-inner-width: 1800;
+$pc-content-width: 1400;
+$sp-inner-width: 710;
+$sp-content-width: 670;
+
+$min-vw: 768px;
+$max-vw: 1920px;
+
+/* stylelint-disable annotation-no-unknown */
+$breakpoints: (
+    'phone': 768px,
+    'mobile': 768px,
+    'small': 840px,
+    'middle': 1100px,
+    'tablet': 1100px,
+    'pc': 1600px,
+    'desktop': 1920px,
+) !default;
+/* stylelint-enable annotation-no-unknown */
+
+@forward '../../../../../node_modules/include-media/dist/_include-media.scss' with($breakpoints: $breakpoints);

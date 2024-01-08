@@ -1,0 +1,7 @@
+@use '../settings/size';
+
+@mixin mq($breakpoint) {
+    @media all and (max-width: map-get(size.$breakpoints, $breakpoint)) {
+        @content;
+    }
+}
