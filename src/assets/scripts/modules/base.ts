@@ -191,8 +191,10 @@ export class Base {
     }
 
     public initControls(): void {
+        console.log(this.perspectiveCamera, this.renderer);
         if (!this.perspectiveCamera || !this.renderer) return;
         this.controls = new OrbitControls(this.perspectiveCamera, this.renderer.domElement);
+        // 設定をtrueにするとヌルっとすべって動く
         this.controls.enableDamping = true;
     }
 

@@ -12,12 +12,13 @@ import {
     PointsMaterial,
     Points,
     MeshBasicMaterial,
+    ShaderMaterial,
 } from 'three';
 
 import { Base } from '../base';
 
-import vertexShader from '../../glsl/background/vertex.glsl';
-import fragmentShader from '../../glsl/background/fragment.glsl';
+import vertexShader from '../../glsl/scene/main.vert';
+import fragmentShader from '../../glsl/scene/main.frag';
 import { LoaderManager } from '../LoadManager';
 
 export class Scene extends Base {
@@ -57,6 +58,8 @@ export class Scene extends Base {
         // this.setSphere();
         this.setParticlesGrid();
 
+        this.initControls();
+
         this.initAxesHelper();
 
         this.render();
@@ -84,25 +87,57 @@ export class Scene extends Base {
     private setParticlesGrid(): void {
         const geometry = new BufferGeometry();
 
-        const nbColumns = 16;
-        const nbLines = 9;
+        const multiplier = 18;
+        // 16 / 9
+        const nbColumns = 16 * multiplier;
+        const nbRows = 9 * multiplier;
+        const vertices: number[] = [];
+
+        for (let i = 0; i < nbColumns; i++) {
+            for (let j = 0; j < nbRows; j++) {
+                const point = [i, j, 0];
+
+                vertices.push(...point);
+            }
+        }
+
+        // console.log(vertices);
 
         // create a simple square shape. We duplicate the top left and bottom right
         // vertices because each vertex needs to appear once per triangle.
-        const vertices = new Float32Array( [
-            -1.0, -1.0,  1.0, // v0
-            1.0, -1.0,  1.0, // v1
-            1.0,  1.0,  1.0, // v2
+        const vertices1 = new Float32Array([
+            -1.0,
+            -1.0,
+            0.0, // v0
+            1.0,
+            -1.0,
+            0.0, // v1
+            1.0,
+            1.0,
+            0.0, // v2
+            -1.0,
+            1.0,
+            0.0, // v5
+        ]);
 
-            1.0,  1.0,  1.0, // v3
-            -1.0,  1.0,  1.0, // v4
-            -1.0, -1.0,  1.0  // v5
-        ] );
+        const vertices32 = new Float32Array(vertices);
 
         // itemSize = 3 because there are 3 values (components) per vertex
-        geometry.setAttribute('position', new BufferAttribute(vertices, 3));
-        const material = new MeshBasicMaterial({ color: 0xff0000 });
-        const mesh = new Mesh(geometry, material);
+        geometry.setAttribute('position', new BufferAttribute(vertices32, 3));
+        geometry.center();
+
+        // const material = new PointsMaterial({ color: 0xff0000 });
+        // const mesh = new Points(geometry, material);
+
+        const material = new ShaderMaterial({
+            vertexShader,
+            fragmentShader,
+            uniforms: {
+                uPointSize: {value: 5.0}
+            }
+        });
+        const mesh = new Points(geometry, material);
+
         this.scene?.add(mesh);
     }
 
