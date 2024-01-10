@@ -1,7 +1,16 @@
 @use '../global/index' as g;
 
-.scene {
+.distortion {
+    position: absolute;
+    top: 0;
+    left: 0;
     height: 100%;
     width: 100%;
-    position: relative;
+}
+.scene {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
 }

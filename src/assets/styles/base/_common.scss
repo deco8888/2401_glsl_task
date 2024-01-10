@@ -83,10 +83,11 @@ body {
     }
 }
 
-#app {
+.app {
     position: relative;
     width: 100%;
-    height: auto;
+    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 }
 
