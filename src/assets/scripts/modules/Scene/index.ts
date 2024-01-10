@@ -7,12 +7,17 @@ import {
     EventDispatcher,
     SphereGeometry,
     MeshMatcapMaterial,
+    BufferGeometry,
+    BufferAttribute,
+    PointsMaterial,
+    Points,
+    MeshBasicMaterial,
 } from 'three';
 
 import { Base } from '../base';
 
-import vertexShader from '../glsl/background/vertex.glsl';
-import fragmentShader from '../glsl/background/fragment.glsl';
+import vertexShader from '../../glsl/background/vertex.glsl';
+import fragmentShader from '../../glsl/background/fragment.glsl';
 import { LoaderManager } from '../LoadManager';
 
 export class Scene extends Base {
@@ -49,7 +54,8 @@ export class Scene extends Base {
 
         // if (this.scene) this.scene.add(this.mesh);
 
-        this.setSphere();
+        // this.setSphere();
+        this.setParticlesGrid();
 
         this.initAxesHelper();
 
@@ -59,16 +65,15 @@ export class Scene extends Base {
     private async initLoader() {
         const assets = [
             {
-              name: 'matcap',
-              texture: './assets/images/matcap.png',
+                name: 'matcap',
+                texture: './assets/images/matcap.png',
             },
-          ]
+        ];
 
-          await this.loader.load(assets);
-
+        await this.loader.load(assets);
     }
 
-    setSphere() {
+    private setSphere() {
         const geometry = new SphereGeometry(1, 32, 32);
         const material = new MeshMatcapMaterial({ matcap: this.loader.assets['matcap'].texture });
         this.mesh = new Mesh(geometry, material);
@@ -76,47 +81,72 @@ export class Scene extends Base {
         if (this.scene) this.scene.add(this.mesh);
     }
 
-    private initMaterial(): RawShaderMaterial {
-        const uniforms = {
-            uTime: {
-                value: 0,
-            },
-            uScroll: {
-                value: 0,
-            },
-            uColor1: {
-                value: new Color('#1a4465'),
-            },
-            uColor2: {
-                value: new Color('#e75862'),
-            },
-            uResolution: {
-                value: new Vector2(this.el?.offsetWidth),
-            },
-        };
+    private setParticlesGrid(): void {
+        const geometry = new BufferGeometry();
 
-        const material = new RawShaderMaterial({
-            uniforms,
-            vertexShader,
-            fragmentShader,
-        });
+        const nbColumns = 16;
+        const nbLines = 9;
 
-        return material;
+        // create a simple square shape. We duplicate the top left and bottom right
+        // vertices because each vertex needs to appear once per triangle.
+        const vertices = new Float32Array( [
+            -1.0, -1.0,  1.0, // v0
+            1.0, -1.0,  1.0, // v1
+            1.0,  1.0,  1.0, // v2
+
+            1.0,  1.0,  1.0, // v3
+            -1.0,  1.0,  1.0, // v4
+            -1.0, -1.0,  1.0  // v5
+        ] );
+
+        // itemSize = 3 because there are 3 values (components) per vertex
+        geometry.setAttribute('position', new BufferAttribute(vertices, 3));
+        const material = new MeshBasicMaterial({ color: 0xff0000 });
+        const mesh = new Mesh(geometry, material);
+        this.scene?.add(mesh);
     }
+
+    // private initMaterial(): RawShaderMaterial {
+    //     const uniforms = {
+    //         uTime: {
+    //             value: 0,
+    //         },
+    //         uScroll: {
+    //             value: 0,
+    //         },
+    //         uColor1: {
+    //             value: new Color('#1a4465'),
+    //         },
+    //         uColor2: {
+    //             value: new Color('#e75862'),
+    //         },
+    //         uResolution: {
+    //             value: new Vector2(this.el?.offsetWidth),
+    //         },
+    //     };
+
+    //     const material = new RawShaderMaterial({
+    //         uniforms,
+    //         vertexShader,
+    //         fragmentShader,
+    //     });
+
+    //     return material;
+    // }
 
     private render() {
         this.stats?.begin();
 
         this.elapsedTime = this.clock.getElapsedTime();
 
-        if (!this.material) return;
-        this.material.uniforms.uTime.value = this.elapsedTime;
+        // if (!this.material) return;
+        // this.material.uniforms.uTime.value = this.elapsedTime;
 
         if (this.scene && this.perspectiveCamera) {
             this.renderer?.render(this.scene, this.perspectiveCamera);
         }
 
-        this.stats?.end()
+        this.stats?.end();
         this.animeFrameId = requestAnimationFrame(() => this.render());
     }
 

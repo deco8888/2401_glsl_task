@@ -14,6 +14,7 @@ import {
     ShaderMaterial,
     WebGLRenderer,
 } from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 type CameraOption = {
     left: number;
@@ -85,6 +86,7 @@ export class Base {
     clock: Clock;
     elapsedTime: number;
     viewport: ThreeNumber;
+    controls: OrbitControls | null = null;
 
     constructor() {
         this.scene = new Scene();
@@ -188,7 +190,13 @@ export class Base {
         return this.viewport;
     }
 
-    public initAxesHelper() {
+    public initControls(): void {
+        if (!this.perspectiveCamera || !this.renderer) return;
+        this.controls = new OrbitControls(this.perspectiveCamera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+    }
+
+    public initAxesHelper(): void {
         const axesHelper = new AxesHelper(3);
         if (this.scene) this.scene.add(axesHelper);
     }

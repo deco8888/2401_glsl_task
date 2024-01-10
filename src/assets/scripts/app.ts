@@ -6,7 +6,7 @@ export class App {
     private waterTexture: WaterTexture | null = null;
 
     constructor() {
-        this.waterTexture = new WaterTexture({ debug: true });
+        // this.waterTexture = new WaterTexture({ debug: true });
 
         // window.addEventListener('resize', () => {
         //     this.onResize();
@@ -16,7 +16,7 @@ export class App {
     }
 
     private init() {
-        // this.scene = new Scene();
+        this.scene = new Scene();
         window.addEventListener('mousemove', this.onMouseMove.bind(this));
         this.tick();
     }
