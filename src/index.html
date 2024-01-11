@@ -3,20 +3,12 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title></title>
-        <meta name="description" content="" />
+        <title>One Day At The Sea</title>
+        <meta name="description" content="One day at the sea" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="theme-color" content="#237437" />
-        <meta property="og:site_name" content="Clip Hover Effect" />
-        <meta property="og:url" content="https://www.nishikimiso.com/cp/misoramen/" />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content="Clip Hover Effect" />
-        <meta property="og:description" content="Clip Hover Effect" />
-        <meta property="og:image" content="https://www.nishikimiso.com/cp/misoramen/assets/imgs/common/ogp.png" />
-        <meta property="og:locale" content="ja_JP" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <link rel="icon" href="assets/imgs/common/favicon.ico" type="image/x-icon" />
-        <link rel="apple-touch-icon" href="assets/imgs/common/apple-touch-icon.png" sizes="180x180" />
+        <link rel="icon" href="assets/images/favicon.ico" type="image/x-icon" />
+        <link rel="apple-touch-icon" href="assets/images/apple-touch-icon.png" sizes="180x180" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
@@ -30,6 +22,9 @@
 
     <body id="top">
         <main class="app">
+            <div class="background">
+                <canvas  class="background__canvas" data-bg-canvas></canvas>
+            </div>
             <canvas class="scene"></canvas>
             <div class="distortion"></div>
         </main>

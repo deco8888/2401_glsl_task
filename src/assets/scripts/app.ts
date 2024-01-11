@@ -6,20 +6,17 @@ export class App {
     protected distortion: Distortion | null = null;
 
     constructor() {
-        this. distortion = new Distortion()
-
-        // window.addEventListener('resize', () => {
-        //     this.onResize();
-        // })
-
+        window.addEventListener('resize', this.onResize.bind(this));
         this.init();
     }
 
     private init() {
         // this.scene = new Scene();
+        this.distortion = new Distortion();
     }
 
     private onResize(): void {
         if (this.scene) this.scene.resize();
+        if (this.distortion) this.distortion.resize();
     }
 }

@@ -28,7 +28,7 @@ export class Planes {
     private images: string[];
     private meshes: Mesh[] = [];
     public textures: Texture[] = [];
-    private hovering: number;
+    public hovering: number;
     private initiated: boolean;
     private uniforms: { [uniform: string]: IUniform };
     private geometry: PlaneGeometry | null = null;
@@ -105,23 +105,13 @@ export class Planes {
     }
 
     private getPlaneMetrics(viewWidth: number, viewHeight: number, width: number, _height: number): PlaneMetricsParams {
-        const planeWidth = viewWidth / 4.5;
-        if (width < 800) {
-            return {
-                planeWidth: viewWidth / 3,
-                planeHeight: viewHeight * 0.8,
-                x: 0,
-                // 静止スペースを計算、プレーン数で割る
-                space: viewWidth / 2,
-            };
-        } else {
-            return {
-                planeWidth,
-                planeHeight: viewHeight * 0.8,
-                x: viewWidth / 5 / 1.5,
-                space: (viewWidth - (viewWidth / 5 / 1.5) * 2 - planeWidth) / 2,
-            };
-        }
+        const planeWidth = viewWidth / 4.0;
+        return {
+            planeWidth,
+            planeHeight: viewHeight * 0.8,
+            x: viewWidth / 5 / 1.8,
+            space: (viewWidth - (viewWidth / 5 / 1.8) * 2 - planeWidth) / 2,
+        };
     }
 
     private getValue(winW: number, winH: number): { x: number; space: number } {
@@ -170,11 +160,10 @@ export class Planes {
 
         if (intersections.length > 0) {
             const intersection = intersections[0];
-            const index = intersection.object.userData.index;
-            (this.meshes[index].material as ShaderMaterial).uniforms.uMouse.value.set(
-                intersection.uv?.x,
-                intersection.uv?.y
-            );
+            const index = intersection.object.userData.index as number;
+            const material = this.meshes[index].material as ShaderMaterial;
+            const uv = intersection.uv as Vector2;
+            (material.uniforms.uMouse as IUniform<Vector2>).value.set(uv.x, uv.y);
 
             document.body.style.cursor = 'pointer';
             if (this.hovering != index) {

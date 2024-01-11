@@ -10,6 +10,7 @@ import { Text } from '../Text';
 
 import vertexShader from '../../glsl/distortion/vertex.glsl';
 import fragmentShader from '../../glsl/distortion/fragment.glsl';
+import { Background } from '../Background';
 
 type ViewSizeOption = {
     width: number;
@@ -20,19 +21,20 @@ export class Distortion extends Base {
     private touchTexture: TouchTexture | null = null;
     private composer: EffectComposer | null = null;
     public raycaster: Raycaster | null = null;
-    // private assets: Object = {};
     private hitObjects: Mesh[] = [];
     private data: {
         text: string[];
         images: string[];
     } | null = null;
+    private planes: Planes | null = null;
+    private text: Text | null = null;
     private subjects: (Planes | Text)[] = [];
     private waterEffect: WaterEffect | null = null;
     private loaderCheck: LoaderCheck | null = null;
+    protected background: Background | null = null;
 
     constructor() {
         super();
-        // this.touchTexture = new TouchTexture({ debug: true });
         this.el = document.querySelector('.distortion');
 
         void this.setup();
@@ -55,18 +57,18 @@ export class Distortion extends Base {
         this.perspectiveCamera = this.initPerspectiveCamera();
         this.perspectiveCamera.position.z = 50;
 
-        this.scene.background = new Color(0x161624);
-
         this.raycaster = new Raycaster();
 
         this.touchTexture = new TouchTexture();
 
         this.data = {
-            text: ['GLSL', 'WEBGL', 'STUDY'],
+            text: ['SEA', 'MORNING', 'AFTERNOON', 'EVENING'],
             images: ['assets/images/image01.jpg', 'assets/images/image02.jpg', 'assets/images/image03.jpg'],
         };
 
-        this.subjects = [new Planes(this, this.data.images), new Text(this, this.data.text)];
+        this.planes = new Planes(this, this.data.images);
+        this.text = new Text(this, this.data.text);
+        this.subjects = [this.planes, this.text];
 
         this.loaderCheck = new LoaderCheck();
         await this.loadAssets().then(() => {
@@ -75,6 +77,7 @@ export class Distortion extends Base {
     }
 
     private init(): void {
+        this.initBackground();
         if (this.touchTexture) this.touchTexture.initTexture();
         this.initTextPlane();
         this.addHitPlane();
@@ -84,7 +87,11 @@ export class Distortion extends Base {
         this.tick();
         window.addEventListener('mousemove', this.onMouseMove.bind(this));
         window.addEventListener('touchmove', this.onTouchMove.bind(this));
-        window.addEventListener('resize', this.onResize.bind(this));
+    }
+
+    private initBackground(): void {
+        const background = document.querySelector('[data-bg-canvas]') as HTMLCanvasElement;
+        if (background) this.background = new Background({ el: background });
     }
 
     private initTextPlane(): void {
@@ -171,20 +178,6 @@ export class Distortion extends Base {
         this.subjects.forEach((subject) => subject.update());
     }
 
-    private onResize(): void {
-        const winW = window.innerWidth;
-        const winH = window.innerHeight;
-
-        if (!this.perspectiveCamera) return;
-        this.perspectiveCamera.aspect = winW / winH;
-        this.perspectiveCamera.updateProjectionMatrix();
-
-        this.composer?.setSize(winW, winH);
-        this.subjects.forEach((subject) => {
-            subject.ouResize(winW, winH);
-        });
-    }
-
     private onMouseMove(e: Partial<MouseEvent>): void {
         const raycaster = this.raycaster as Raycaster;
         /**
@@ -212,11 +205,40 @@ export class Distortion extends Base {
                 subject.onMouseMove(e);
             }
         });
+
+        if (this.planes) {
+            if (this.text) {
+                this.text.changeText(this.planes.hovering + 1);
+            }
+
+            if (this.background) {
+                this.background.changeColor(this.planes.hovering + 1);
+            }
+        }
     }
 
     private onTouchMove(e: TouchEvent): void {
         const touch = e.targetTouches[0];
         this.onMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+    }
+
+    public resize(): void {
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+
+        if (this.perspectiveCamera) {
+            this.perspectiveCamera.aspect = winW / winH;
+            this.perspectiveCamera.updateProjectionMatrix();
+        }
+
+        this.composer?.setSize(winW, winH);
+        this.subjects.forEach((subject) => {
+            subject.ouResize(winW, winH);
+        });
+
+        if (this.background) {
+            this.background.resize();
+        }
     }
 
     public getViewSize(): ViewSizeOption {

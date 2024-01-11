@@ -1,9 +1,11 @@
 import { Color, Mesh, PlaneGeometry, RawShaderMaterial, Vector2, EventDispatcher } from 'three';
 
-import { Base } from './base';
+import { Base } from '../base';
 
-import vertexShader from '../glsl/background/vertex.glsl';
-import fragmentShader from '../glsl/background/fragment.glsl';
+import vertexShader from '../../glsl/background/vertex.glsl';
+import fragmentShader from '../../glsl/background/fragment.glsl';
+
+const COLOR_LIST = ['#92b7d6', '#6ccedd', '#fcedb9', '#f4b266'];
 
 export class Background extends Base {
     animeFrameId: number | undefined;
@@ -22,9 +24,9 @@ export class Background extends Base {
 
         this.camera = this.initCamera();
 
-        if(!this.el) return;
+        if (!this.el) return;
         this.renderer = this.initRenderer({
-            canvas: this.el as HTMLCanvasElement
+            canvas: this.el as HTMLCanvasElement,
         });
 
         this.resize();
@@ -47,10 +49,10 @@ export class Background extends Base {
                 value: 0,
             },
             uColor1: {
-                value: new Color('#1a4465'),
+                value: new Color('#eff6fe'),
             },
             uColor2: {
-                value: new Color('#e75862'),
+                value: new Color('#93d9fd'),
             },
             uResolution: {
                 value: new Vector2(this.el?.offsetWidth),
@@ -67,7 +69,7 @@ export class Background extends Base {
     }
 
     private render() {
-        // this.elapsedTime = this.clock.getElapsedTime();
+        this.elapsedTime = this.clock.getElapsedTime();
 
         if (!this.material) return;
         this.material.uniforms.uTime.value = this.elapsedTime;
@@ -75,8 +77,6 @@ export class Background extends Base {
         if (this.scene && this.camera) {
             this.renderer?.render(this.scene, this.camera);
         }
-
-        if (this.camera) this.camera;
 
         this.animeFrameId = requestAnimationFrame(() => this.render());
     }
@@ -99,5 +99,11 @@ export class Background extends Base {
         }
 
         this.dispose();
+    }
+
+    public changeColor(index: number): void {
+        if (!this.material) return;
+        this.material.uniforms.uColor2.value = new Color(COLOR_LIST[index]);
+        this.material.needsUpdate = true;
     }
 }
