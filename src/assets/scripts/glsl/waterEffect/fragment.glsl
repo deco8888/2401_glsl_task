@@ -8,6 +8,6 @@ void mainUv(inout vec2 uv) {
     float vx = -(tex.r * 2.0 - 1.0);
     float vy = -(tex.g * 2.0 - 1.0);
     float intensity = tex.b;
-    uv.x += vx * 0.2 * intensity;
-    uv.y += vy * 0.2 * intensity;
+    uv.x += vx * 0.1 * intensity;
+    uv.y += vy * 0.1 * intensity;
 }

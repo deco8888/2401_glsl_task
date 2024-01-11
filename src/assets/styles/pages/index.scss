@@ -1,5 +1,13 @@
 @use '../global/index' as g;
 
+.title {
+    position: relative;
+    z-index: 1;
+    margin: 15px 0 0 20px;
+    font-size: 20px;
+    font-family: g.$font-family-dancing-script;
+}
+
 .background {
     position: fixed;
     top: 0;
