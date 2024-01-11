@@ -4,6 +4,7 @@ import { Distortion } from '../Distortion';
 import vertexShader from '../../glsl/planes/vertex.glsl';
 import fragmentShader from '../../glsl/planes/fragment.glsl';
 import { LoaderCheck } from '../LoaderCheck';
+import { lerp } from '../../utils/math';
 
 type PlaneMetricsParams = {
     planeWidth: number;
@@ -16,7 +17,7 @@ export class Planes {
     private distortion: Distortion;
     private images: string[];
     private meshes: Mesh[] = [];
-    private textures: Texture[] = [];
+    public textures: Texture[] = [];
     private hovering: number;
     private initiated: boolean;
     private uniforms: { [uniform: string]: IUniform };
@@ -32,15 +33,24 @@ export class Planes {
         };
     }
 
-    public load(loaderCheck: LoaderCheck): void {
-        for (let i = 0; i < this.images.length; i++) {
-            loaderCheck.begin('image-' + i);
+    public async load(loaderCheck: LoaderCheck): Promise<void> {
+        await Promise.all(
+            this.images.map(async (_, i) => {
+                loaderCheck.begin(`image-${i}`);
+                await this.setTexture(i);
+                loaderCheck.end(`image-${i}`);
+            })
+        );
+    }
+
+    private setTexture(i: number): Promise<null> {
+        return new Promise((resolve) => {
             const textureLoader = new TextureLoader();
             textureLoader.load(this.images[i], (image) => {
                 this.textures[i] = image;
-                loaderCheck.end('image-' + i);
+                resolve(null);
             });
-        }
+        });
     }
 
     public init(): void {
@@ -54,14 +64,17 @@ export class Planes {
         for (let i = 0; i < 3; i++) {
             const texture = this.textures[i];
 
+            /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+            const texW = texture ? (texture.image.width as number) : 0;
+            const texH = texture ? (texture.image.height as number) : 0;
+            /* eslint-enable */
+
             const uniforms = {
                 uZoom: new Uniform(0.0),
                 uZoomDelta: new Uniform(0.2),
                 uPlaneSize: this.uniforms.uPlaneSize,
                 uImage: new Uniform(texture),
-                uImageSize: new Uniform(
-                    new Vector2(texture ? texture.image.width : 0, texture ? texture.image.height : 0)
-                ),
+                uImageSize: new Uniform(new Vector2(texW, texH)),
                 uMouse: new Uniform(new Vector2(0, 0)),
             };
 
@@ -101,7 +114,7 @@ export class Planes {
         }
     }
 
-    private getValue(winW: number, winH: number) {
+    private getValue(winW: number, winH: number): { x: number; space: number } {
         const { width, height } = this.distortion.getViewSize();
 
         const planeMetrics = this.getPlaneMetrics(
@@ -116,7 +129,7 @@ export class Planes {
 
         this.geometry = new PlaneGeometry(pw, ph, 1, 1);
 
-        this.uniforms.uPlaneSize.value.set(pw, ph);
+        (this.uniforms.uPlaneSize as IUniform<Vector2>).value.set(pw, ph);
         // this.uniforms.uPlaneSize.needsUpdate = true;
 
         const translateToLeft = -width / 2 + planeMetrics.planeWidth / 2;
@@ -130,7 +143,7 @@ export class Planes {
         };
     }
 
-    public ouResize(winW: number, winH: number) {
+    public ouResize(winW: number, winH: number): void {
         const { x, space } = this.getValue(winW, winH);
 
         this.meshes.forEach((mesh, i) => {
@@ -138,5 +151,19 @@ export class Planes {
             if (this.geometry) mesh.geometry = this.geometry;
             mesh.position.x = x + i * space;
         });
+    }
+
+    public update(): void {
+        const meshes = this.meshes;
+        for (let i = 0; i < 3; i++) {
+            const zoomTarget = this.hovering === i ? 1 : 0;
+            const uZoom = (meshes[i].material as ShaderMaterial).uniforms.uZoom as IUniform<number>;
+
+            const zoomChange = lerp(uZoom.value, zoomTarget, 0.1, 0.00001);
+            if (zoomChange !== 0) {
+                uZoom.value += zoomChange;
+                // uZoom.needsUpdate = true;
+            }
+        }
     }
 }

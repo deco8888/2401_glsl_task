@@ -34,7 +34,7 @@ export class TouchTexture {
     } | null = null;
     public texture: Texture | null = null;
 
-    constructor(options: Param) {
+    constructor(options: Partial<Param> = {}) {
         this.points = [];
         this.radius = SIZE * 0.1;
         this.size = {
@@ -50,7 +50,7 @@ export class TouchTexture {
 
         this.initTexture();
         if (!this.canvas) return;
-        if (options.debug) document.querySelector('.app')!.append(this.canvas);
+        if (options.debug) document.querySelector('.app')?.append(this.canvas);
     }
 
     public initTexture(): void {
@@ -59,8 +59,9 @@ export class TouchTexture {
         this.canvas.width = this.size.width;
         this.canvas.height = this.size.height;
         this.ctx = this.canvas.getContext('2d');
+
+        this.clear();
         this.texture = new Texture(this.canvas);
-        // this.clear();
     }
 
     private clear(): void {
@@ -125,11 +126,11 @@ export class TouchTexture {
     public update(): void {
         this.clear();
         // A. 0.015625
-        let agePart = 1.0 / MAX_AGE;
+        const agePart = 1.0 / MAX_AGE;
         this.points.forEach((point, i) => {
             // 古いほど遅くなる(数値は小さくなる) ... 1.0 - (1 / 64) = 0.9843.. 〜 1.0 - (64 / 64) = 0.0
-            let slowAsOlder = 1.0 - point.age / MAX_AGE;
-            let force = point.force * agePart * slowAsOlder;
+            const slowAsOlder = 1.0 - point.age / MAX_AGE;
+            const force = point.force * agePart * slowAsOlder;
             point.x += point.vx * force;
             point.y += point.vy * force;
             point.age += 1;
@@ -152,7 +153,7 @@ export class TouchTexture {
         if (!this.ctx) return;
 
         // 正規化された位置をキャンバス座標に変換
-        let pos = {
+        const pos = {
             x: point.x * this.size.width,
             y: point.y * this.size.height,
         };
@@ -184,16 +185,16 @@ export class TouchTexture {
          * 単位ベクトルの範囲 (-1 ～ 1)
          * (1 + 1) / 2 * 255 = 255 ... (-1 + 1) / 2 * 255 = 0
          */
-        let red = ((point.vx + 1) / 2) * 255;
-        let green = ((point.y + 1) / 2) * 255;
+        const red = ((point.vx + 1) / 2) * 255;
+        const green = ((point.y + 1) / 2) * 255;
         /**
          * 強度の範囲 (0 ～ 1)
          * 0 * 255 = 0 ... 1 * 255 = 255
          */
-        let blue = intensity * 255;
-        let color = `${red}, ${green}, ${blue}`;
+        const blue = intensity * 255;
+        const color = `${red}, ${green}, ${blue}`;
 
-        let offset = this.size.width * 5;
+        const offset = this.size.width * 5;
 
         ctx.shadowOffsetX = offset;
         ctx.shadowOffsetY = offset;

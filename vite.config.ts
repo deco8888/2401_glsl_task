@@ -16,7 +16,8 @@ export default defineConfig({
             },
             output: {
                 assetFileNames: ({ name }: { name: any }): string => {
-                    const folder = name?.split('.').pop() == 'css' ? 'styles/' : '/';
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+                    const folder = name.split('.').pop() == 'css' ? 'styles/' : '/';
                     return `assets/${folder}[name].[hash][extname]`;
                 },
                 chunkFileNames: 'assets/scripts/[name].[hash].js',
@@ -33,4 +34,9 @@ export default defineConfig({
         },
     },
     plugins: [glslify()],
+    optimizeDeps: {
+        exclude: [
+            'postprocessing'
+        ]
+    }
 });

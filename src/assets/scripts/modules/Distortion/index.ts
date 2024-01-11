@@ -1,4 +1,4 @@
-import { Color, Mesh, MeshBasicMaterial, PlaneGeometry, Raycaster, ShaderMaterial, Uniform } from 'three';
+import { Clock, Color, Mesh, MeshBasicMaterial, PlaneGeometry, Raycaster, ShaderMaterial, Uniform } from 'three';
 import { EffectComposer, RenderPass, EffectPass } from 'postprocessing';
 
 import { TouchTexture } from '../TouchTexture';
@@ -19,7 +19,7 @@ export class Distortion extends Base {
     private touchTexture: TouchTexture | null = null;
     private composer: EffectComposer | null = null;
     private raycaster: Raycaster | null = null;
-    private assets: Object = {};
+    // private assets: Object = {};
     private hitObjects: Mesh[] = [];
     private data: {
         text: string[];
@@ -31,18 +31,20 @@ export class Distortion extends Base {
 
     constructor() {
         super();
-        this.touchTexture = new TouchTexture({ debug: true });
+        // this.touchTexture = new TouchTexture({ debug: true });
         this.el = document.querySelector('.distortion');
 
-        this.setup();
+        void this.setup();
     }
 
-    private setup(): void {
+    private async setup(): Promise<void> {
+        if (!this.scene || !this.el) return;
+
         this.renderer = this.initRenderer({
             antialias: false,
         });
         if (this.renderer) {
-            this.el!.appendChild(this.renderer.domElement);
+            this.el.appendChild(this.renderer.domElement);
             // ポストプロセッシング
             // 参考にしたサイト：https://blog.design-nkt.com/osyare-threejs11/
             // コンポーザーを生成
@@ -52,58 +54,25 @@ export class Distortion extends Base {
         this.perspectiveCamera = this.initPerspectiveCamera();
         this.perspectiveCamera.position.z = 50;
 
-        this.scene!.background = new Color(0x161624);
+        this.scene.background = new Color(0x161624);
+
+        this.clock = new Clock();
 
         this.raycaster = new Raycaster();
 
+        this.touchTexture = new TouchTexture();
+
         this.data = {
             text: ['WEBGL'],
-            images: ['/assets/images/image01.jpg'],
+            images: ['assets/images/image01.jpg', 'assets/images/image02.jpg', 'assets/images/image03.jpg'],
         };
 
         this.subjects = [new Planes(this, this.data.images)];
 
-        this.tick();
-        window.addEventListener('mousemove', this.onMouseMove.bind(this));
-        window.addEventListener('resize', this.onResize.bind(this));
-
         this.loaderCheck = new LoaderCheck();
-        this.loadAssets().then(this.init);
-    }
-
-    private onResize(): void {
-        const winW = window.innerWidth;
-        const winH = window.innerHeight;
-
-        if (!this.perspectiveCamera) return;
-        this.perspectiveCamera.aspect = winW / winH;
-        this.perspectiveCamera.updateProjectionMatrix();
-
-        this.composer?.setSize(winW, winH);
-        this.subjects.forEach((subject) => {
-            subject.ouResize(winW, winH);
+        await this.loadAssets().then(() => {
+            this.init();
         });
-    }
-
-    private onMouseMove(e: MouseEvent): void {
-        /**
-         *  (0,0)|         (3,0)
-         *       |
-         *  (0,3)|________ (3,3)
-         */
-        const point = {
-            // https://blog.design-nkt.com/osyare-threejs13/
-            x: e.clientX / window.innerWidth,
-            y: e.clientY / window.innerHeight,
-        };
-
-        this.touchTexture?.addPoint(point);
-    }
-
-    private tick(): void {
-        if (!this.touchTexture) return;
-        this.touchTexture.update();
-        requestAnimationFrame(this.tick.bind(this));
     }
 
     private init(): void {
@@ -112,6 +81,10 @@ export class Distortion extends Base {
         this.addHitPlane();
         this.subjects.forEach((subject) => subject.init());
         this.initComposer();
+
+        this.tick();
+        window.addEventListener('mousemove', this.onMouseMove.bind(this));
+        window.addEventListener('resize', this.onResize.bind(this));
     }
 
     private initTextPlane(): void {
@@ -169,25 +142,71 @@ export class Distortion extends Base {
         this.composer?.addPass(waterPass);
     }
 
-    private loadAssets(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            const loaderCheck = this.loaderCheck;
-            if (!loaderCheck) {
-                reject();
-            } else {
-                this.subjects.forEach((subject) => subject.load(loaderCheck));
+    private async loadAssets(): Promise<void> {
+        const loaderCheck = this.loaderCheck as LoaderCheck;
 
-                loaderCheck!.onComplete = () => {
-                    resolve();
-                };
-            }
+        await Promise.all(
+            this.subjects.map(async (subject) => {
+                await subject.load(loaderCheck);
+            })
+        );
+
+        loaderCheck.onComplete();
+    }
+
+    private tick(): void {
+        this.render();
+        this.update();
+        requestAnimationFrame(this.tick.bind(this));
+    }
+
+    private render(): void {
+        this.composer?.render(this.clock.getDelta());
+    }
+
+    private update(): void {
+        if (!this.touchTexture) return;
+        this.touchTexture.update();
+        this.subjects.forEach(subject => subject.update())
+    }
+
+    private onResize(): void {
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+
+        if (!this.perspectiveCamera) return;
+        this.perspectiveCamera.aspect = winW / winH;
+        this.perspectiveCamera.updateProjectionMatrix();
+
+        this.composer?.setSize(winW, winH);
+        this.subjects.forEach((subject) => {
+            subject.ouResize(winW, winH);
         });
     }
 
+    private onMouseMove(e: MouseEvent): void {
+        /**
+         *  (0,0)|         (3,0)
+         *       |
+         *  (0,3)|________ (3,3)
+         */
+        const point = {
+            // https://blog.design-nkt.com/osyare-threejs13/
+            x: e.clientX / window.innerWidth,
+            y: e.clientY / window.innerHeight,
+        };
+
+        this.touchTexture?.addPoint(point);
+    }
+
     public getViewSize(): ViewSizeOption {
-        const fov = (this.perspectiveCamera!.fov * Math.PI) / 180;
-        // 正の数を返す
-        const height = Math.abs(this.perspectiveCamera!.position.z * Math.tan(fov / 2) * 2);
-        return { width: height * this.perspectiveCamera!.aspect, height };
+        if (this.perspectiveCamera) {
+            const fov = (this.perspectiveCamera.fov * Math.PI) / 180;
+            // 正の数を返す
+            const height = Math.abs(this.perspectiveCamera.position.z * Math.tan(fov / 2) * 2);
+            return { width: height * this.perspectiveCamera.aspect, height };
+        } else {
+            return { width: 0, height: 0 };
+        }
     }
 }

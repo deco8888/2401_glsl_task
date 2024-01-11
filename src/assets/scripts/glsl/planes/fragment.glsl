@@ -16,12 +16,12 @@ vec2 withRatio(vec2 uv, vec2 canvasSize, vec2 textureSize) {
 
     return vec2(
         uv.x * ratio.x + (1.0 - ratio.x) * 0.5,
-        uv.y * ratio.y + (1.0 - ratio.y) * 0.5,
+        uv.y * ratio.y + (1.0 - ratio.y) * 0.5
     );
 }
 
 vec3 grayScale(vec3 color) {
-    return vec3(color.r + color.g + color.b) / 3.0
+    return vec3(color.r + color.g + color.b) / 3.0;
 }
 
 void main() {
