@@ -1,4 +1,4 @@
-import { Clock, Color, Mesh, MeshBasicMaterial, PlaneGeometry, Raycaster, ShaderMaterial, Uniform } from 'three';
+import { Color, Mesh, MeshBasicMaterial, PlaneGeometry, Raycaster, ShaderMaterial, Uniform, Vector2 } from 'three';
 import { EffectComposer, RenderPass, EffectPass } from 'postprocessing';
 
 import { TouchTexture } from '../TouchTexture';
@@ -6,6 +6,7 @@ import { Base } from '../base';
 import { Planes } from '../Planes';
 import { WaterEffect } from '../WaterEffect';
 import { LoaderCheck } from '../LoaderCheck';
+import { Text } from '../Text';
 
 import vertexShader from '../../glsl/distortion/vertex.glsl';
 import fragmentShader from '../../glsl/distortion/fragment.glsl';
@@ -18,14 +19,14 @@ type ViewSizeOption = {
 export class Distortion extends Base {
     private touchTexture: TouchTexture | null = null;
     private composer: EffectComposer | null = null;
-    private raycaster: Raycaster | null = null;
+    public raycaster: Raycaster | null = null;
     // private assets: Object = {};
     private hitObjects: Mesh[] = [];
     private data: {
         text: string[];
         images: string[];
     } | null = null;
-    private subjects: Planes[] = [];
+    private subjects: (Planes | Text)[] = [];
     private waterEffect: WaterEffect | null = null;
     private loaderCheck: LoaderCheck | null = null;
 
@@ -56,18 +57,16 @@ export class Distortion extends Base {
 
         this.scene.background = new Color(0x161624);
 
-        this.clock = new Clock();
-
         this.raycaster = new Raycaster();
 
         this.touchTexture = new TouchTexture();
 
         this.data = {
-            text: ['WEBGL'],
+            text: ['GLSL', 'WEBGL', 'STUDY'],
             images: ['assets/images/image01.jpg', 'assets/images/image02.jpg', 'assets/images/image03.jpg'],
         };
 
-        this.subjects = [new Planes(this, this.data.images)];
+        this.subjects = [new Planes(this, this.data.images), new Text(this, this.data.text)];
 
         this.loaderCheck = new LoaderCheck();
         await this.loadAssets().then(() => {
@@ -84,6 +83,7 @@ export class Distortion extends Base {
 
         this.tick();
         window.addEventListener('mousemove', this.onMouseMove.bind(this));
+        window.addEventListener('touchmove', this.onTouchMove.bind(this));
         window.addEventListener('resize', this.onResize.bind(this));
     }
 
@@ -136,7 +136,7 @@ export class Distortion extends Base {
         this.waterEffect = new WaterEffect({ texture: this.touchTexture.texture });
         const waterPass = new EffectPass(this.perspectiveCamera, this.waterEffect);
         // renderToScreen: エフェクトをかけいた映像を画面に映す
-        renderPass.renderToScreen = true;
+        renderPass.renderToScreen = false;
         waterPass.renderToScreen = true;
         this.composer?.addPass(renderPass);
         this.composer?.addPass(waterPass);
@@ -161,13 +161,14 @@ export class Distortion extends Base {
     }
 
     private render(): void {
-        this.composer?.render(this.clock.getDelta());
+        const delta = this.clock.getDelta();
+        this.composer?.render(delta);
     }
 
     private update(): void {
         if (!this.touchTexture) return;
         this.touchTexture.update();
-        this.subjects.forEach(subject => subject.update())
+        this.subjects.forEach((subject) => subject.update());
     }
 
     private onResize(): void {
@@ -184,19 +185,38 @@ export class Distortion extends Base {
         });
     }
 
-    private onMouseMove(e: MouseEvent): void {
+    private onMouseMove(e: Partial<MouseEvent>): void {
+        const raycaster = this.raycaster as Raycaster;
         /**
          *  (0,0)|         (3,0)
          *       |
          *  (0,3)|________ (3,3)
          */
-        const point = {
+        if (e.clientX == undefined || e.clientY == undefined) return;
+        const mouse = {
             // https://blog.design-nkt.com/osyare-threejs13/
             x: e.clientX / window.innerWidth,
             y: e.clientY / window.innerHeight,
         };
 
-        this.touchTexture?.addPoint(point);
+        this.touchTexture?.addPoint(mouse);
+
+        if (!this.perspectiveCamera) return;
+        raycaster.setFromCamera(
+            new Vector2((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1),
+            this.perspectiveCamera
+        );
+
+        this.subjects.forEach((subject) => {
+            if (subject.onMouseMove) {
+                subject.onMouseMove(e);
+            }
+        });
+    }
+
+    private onTouchMove(e: TouchEvent): void {
+        const touch = e.targetTouches[0];
+        this.onMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
     }
 
     public getViewSize(): ViewSizeOption {

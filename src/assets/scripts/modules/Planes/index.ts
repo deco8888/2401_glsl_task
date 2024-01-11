@@ -1,4 +1,14 @@
-import { IUniform, Mesh, PlaneGeometry, ShaderMaterial, Texture, TextureLoader, Uniform, Vector2 } from 'three';
+import {
+    IUniform,
+    Mesh,
+    PlaneGeometry,
+    Raycaster,
+    ShaderMaterial,
+    Texture,
+    TextureLoader,
+    Uniform,
+    Vector2,
+} from 'three';
 import { Distortion } from '../Distortion';
 
 import vertexShader from '../../glsl/planes/vertex.glsl';
@@ -153,16 +163,42 @@ export class Planes {
         });
     }
 
+    public onMouseMove(_e: Partial<MouseEvent>): void {
+        const raycaster = this.distortion.raycaster as Raycaster;
+        // オブジェクトとの交差を検知
+        const intersections = raycaster.intersectObjects(this.meshes);
+
+        if (intersections.length > 0) {
+            const intersection = intersections[0];
+            const index = intersection.object.userData.index;
+            (this.meshes[index].material as ShaderMaterial).uniforms.uMouse.value.set(
+                intersection.uv?.x,
+                intersection.uv?.y
+            );
+
+            document.body.style.cursor = 'pointer';
+            if (this.hovering != index) {
+                // this.distortion.
+                this.hovering = index;
+            }
+        } else {
+            this.hovering = -1;
+            document.body.style.cursor = 'default';
+        }
+    }
+
     public update(): void {
         const meshes = this.meshes;
         for (let i = 0; i < 3; i++) {
+            // オブジェクト交差 ➡︎ hoveringに指定のオブジェクトインデックスが格納される
             const zoomTarget = this.hovering === i ? 1 : 0;
-            const uZoom = (meshes[i].material as ShaderMaterial).uniforms.uZoom as IUniform<number>;
+            const material = meshes[i].material as ShaderMaterial;
+            const uZoom = material.uniforms.uZoom as IUniform<number>;
 
             const zoomChange = lerp(uZoom.value, zoomTarget, 0.1, 0.00001);
             if (zoomChange !== 0) {
                 uZoom.value += zoomChange;
-                // uZoom.needsUpdate = true;
+                material.needsUpdate = true;
             }
         }
     }

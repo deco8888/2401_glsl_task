@@ -53,7 +53,7 @@ const defaultPerspectiveCamera: PerspectiveCameraOption = {
     height: window.innerHeight,
     near: 0.1,
     far: 10000,
-    position: { x: 5, y: 5, z: 5 },
+    position: { x: 0, y: 0, z: 0 },
 };
 
 type RendererOption = {
@@ -124,7 +124,7 @@ export class Base {
         const params = { ...defaultPerspectiveCamera, ...props };
         const camera = new PerspectiveCamera(params.fov, params.width / params.height, params.near, params.far);
         camera.position.set(params.position.x, params.position.y, params.position.z);
-        camera.lookAt(0, 0, 0);
+        // camera.lookAt(0, 0, 0);
         // updateProjectionMatrix: カメラの投影行列を更新。パラメータを変更した後に呼び出す必要がある。
         camera.updateProjectionMatrix();
         return camera;

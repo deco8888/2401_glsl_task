@@ -1,4 +1,4 @@
-import { Color, Mesh, PlaneGeometry, RawShaderMaterial, Vector2, EventDispatcher, Object3D, Material } from 'three';
+import { Color, Mesh, PlaneGeometry, RawShaderMaterial, Vector2, EventDispatcher } from 'three';
 
 import { Base } from './base';
 
@@ -67,7 +67,7 @@ export class Background extends Base {
     }
 
     private render() {
-        this.elapsedTime = this.clock.getElapsedTime();
+        // this.elapsedTime = this.clock.getElapsedTime();
 
         if (!this.material) return;
         this.material.uniforms.uTime.value = this.elapsedTime;

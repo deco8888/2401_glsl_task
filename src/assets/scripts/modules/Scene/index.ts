@@ -141,38 +141,10 @@ export class Scene extends Base {
         this.scene?.add(mesh);
     }
 
-    // private initMaterial(): RawShaderMaterial {
-    //     const uniforms = {
-    //         uTime: {
-    //             value: 0,
-    //         },
-    //         uScroll: {
-    //             value: 0,
-    //         },
-    //         uColor1: {
-    //             value: new Color('#1a4465'),
-    //         },
-    //         uColor2: {
-    //             value: new Color('#e75862'),
-    //         },
-    //         uResolution: {
-    //             value: new Vector2(this.el?.offsetWidth),
-    //         },
-    //     };
-
-    //     const material = new RawShaderMaterial({
-    //         uniforms,
-    //         vertexShader,
-    //         fragmentShader,
-    //     });
-
-    //     return material;
-    // }
-
     private render() {
         this.stats?.begin();
 
-        this.elapsedTime = this.clock.getElapsedTime();
+        // this.elapsedTime = this.clock.getElapsedTime();
 
         // if (!this.material) return;
         // this.material.uniforms.uTime.value = this.elapsedTime;

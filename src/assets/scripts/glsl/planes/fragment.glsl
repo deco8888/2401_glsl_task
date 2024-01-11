@@ -21,14 +21,14 @@ vec2 withRatio(vec2 uv, vec2 canvasSize, vec2 textureSize) {
 }
 
 vec3 grayScale(vec3 color) {
-    return vec3(color.r + color.g + color.b) / 3.0;
+    return vec3(color.r + color.g + color.b) / 2.0;
 }
 
 void main() {
     vec2 uv = vUv;
     uv -= 0.5;
     uv * 1.0 - uZoomDelta * uZoom;
-    uv += uZoomDelta * (uMouse - 0.5) * 0.5 * uZoom;
+    // uv += uZoomDelta * (uMouse - 0.5) * 0.5 * uZoom;
     uv += 0.5;
     uv = withRatio(uv, uPlaneSize, uImageSize);
     vec3 tex = texture2D(uImage, uv).xyz;
