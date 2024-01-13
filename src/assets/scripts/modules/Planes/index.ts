@@ -29,7 +29,7 @@ export class Planes {
     private meshes: Mesh[] = [];
     public textures: Texture[] = [];
     public hovering: number;
-    private initiated: boolean;
+    protected initiated: boolean;
     private uniforms: { [uniform: string]: IUniform };
     private geometry: PlaneGeometry | null = null;
 
@@ -104,7 +104,7 @@ export class Planes {
         }
     }
 
-    private getPlaneMetrics(viewWidth: number, viewHeight: number, width: number, _height: number): PlaneMetricsParams {
+    private getPlaneMetrics(viewWidth: number, viewHeight: number, _width: number, _height: number): PlaneMetricsParams {
         const planeWidth = viewWidth / 4.0;
         return {
             planeWidth,

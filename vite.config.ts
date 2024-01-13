@@ -15,9 +15,8 @@ export default defineConfig({
                 main: path.resolve(ROOT_PATH, 'index.html'),
             },
             output: {
-                assetFileNames: ({ name }: { name: any }): string => {
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-                    const folder = name.split('.').pop() == 'css' ? 'styles/' : '/';
+                assetFileNames: ({ name }): string => {
+                    const folder = name?.split('.').pop() == 'css' ? 'styles/' : '/';
                     return `assets/${folder}[name].[hash][extname]`;
                 },
                 chunkFileNames: 'assets/scripts/[name].[hash].js',

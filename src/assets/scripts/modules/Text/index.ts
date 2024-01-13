@@ -12,7 +12,7 @@ export class Text {
     private text: string[];
     private fonts: Font[] = [];
     public textList: Mesh[] = [];
-    private initiated: boolean;
+    protected initiated: boolean;
 
     constructor(distortion: Distortion, text: string[]) {
         this.distortion = distortion;
